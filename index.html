@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Live Clock</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--text:#1b2433;--muted:#6b7688;--accent:#e2571f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141c;--card:#1a2130;--text:#eef2f9;--muted:#98a3b8;--accent:#ff8a57}}
+:root[data-theme="dark"]{--bg:#10141c;--card:#1a2130;--text:#eef2f9;--muted:#98a3b8;--accent:#ff8a57}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px}
+.card{background:var(--card);border-radius:20px;padding:32px 24px;width:100%;max-width:440px;text-align:center;
+box-shadow:0 8px 30px rgba(0,0,0,.12)}
+#time{font-size:clamp(2.6rem,12vw,4rem);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:1px;color:var(--accent)}
+#ampm{font-size:1.2rem;margin-left:6px}
+#date{margin-top:8px;font-size:1.1rem}
+#zone{margin-top:6px;color:var(--muted);font-size:.9rem}
+.row{margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+select,button{font:inherit;padding:8px 12px;border-radius:10px;border:1px solid var(--muted);background:var(--card);color:var(--text);cursor:pointer}
+</style>
+</head>
+<body>
+<div class="card">
+  <div><span id="time">--:--:--</span><span id="ampm"></span></div>
+  <div id="date">Loading...</div>
+  <div id="zone"></div>
+  <div class="row">
+    <select id="tz" aria-label="Time zone">
+      <option value="">My device time</option>
+      <option value="Australia/Darwin">Darwin (NT)</option>
+      <option value="Australia/Perth">Perth (WA)</option>
+      <option value="Australia/Adelaide">Adelaide (SA)</option>
+      <option value="Australia/Brisbane">Brisbane (QLD)</option>
+      <option value="Australia/Sydney">Sydney (NSW)</option>
+    </select>
+    <button id="fmt">12h / 24h</button>
+  </div>
+</div>
+<script>
+let use24 = false;
+const tzSel = document.getElementById('tz');
+function tick(){
+  const now = new Date();
+  const tz = tzSel.value || undefined;
+  const t = new Intl.DateTimeFormat('en-AU',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:!use24,timeZone:tz}).formatToParts(now);
+  const get = k => (t.find(p=>p.type===k)||{}).value || '';
+  document.getElementById('time').textContent = get('hour')+':'+get('minute')+':'+get('second');
+  document.getElementById('ampm').textContent = use24 ? '' : get('dayPeriod').toUpperCase();
+  document.getElementById('date').textContent = new Intl.DateTimeFormat('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:tz}).format(now);
+  document.getElementById('zone').textContent = tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+document.getElementById('fmt').onclick = () => { use24 = !use24; tick(); };
+tzSel.onchange = tick;
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
